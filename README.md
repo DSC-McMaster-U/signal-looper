@@ -1,10 +1,10 @@
-<h1 align="center">🎵 Signal Looper</h1>
+<h1 align="center">🎵 SignalLooper</h1>
 
 ## 🎧 Project Overview
 
-**Signal Looper** is a desktop looper and pedalboard workstation for musicians, producers, and hobbyists.
+**SignalLooper** is a desktop looper and pedalboard workstation for musicians, producers, and hobbyists.
 
-Recording and layering loops with custom effects chains is often found within expensive hardware or bloated DAWs. Signal Looper makes it easy to record a riff, add custom or preset pedals, layer a bassline and other tracks, and export your demo, all within an intuitive desktop app. Built for quick demos and effects chain experimentation.
+Recording and layering loops with custom effects chains is often found within expensive hardware or bloated DAWs. SignalLooper makes it easy to record a riff, add custom or preset pedals, layer a bassline and other tracks, and export your demo, all within an intuitive desktop app. Built for quick demos and effects chain experimentation.
 
 ---
 
