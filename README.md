@@ -38,7 +38,7 @@ Recording and layering loops with custom effects chains is often found within ex
 | [**Melody Zahir**](https://github.com/SaniyaZahir) <br/><i>Developer</i> |  |  |  |
 | [**Martin Tsitrinel**](https://github.com/Mar-t1n) <br/><i>Developer</i> |  |  |  |
 | [**Elizabeth Cay**](https://github.com/elizabethcay) <br/><i>Developer</i> |  |  |  |
-|  |  |  |  |
+| [**Thaneesha Sivasithambaram**](https://github.com/thaneeshasiva) <br/><i>Developer</i> |  |  |  |
 |  |  |  |  |
 |  |  |  |  |
 |  |  |  |  |
