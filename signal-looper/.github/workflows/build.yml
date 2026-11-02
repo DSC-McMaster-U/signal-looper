@@ -16,7 +16,7 @@ jobs:
   - name: Set up Node
     uses: actions/setup-node@v4
     with: 
-     node-version: lts/* # node ver not specified, install latest ver.
+     node-version: lts/* # install latest ver.
      cache: npm
      cache-dependency-path: signal-looper/package-lock.json
 
@@ -34,5 +34,5 @@ jobs:
 
   - name: Build app
     working-directory: signal-looper
-    run: npm run tauri build -- --debug --no-bundle # initial check for succesful builds only, change later
+    run: npm run tauri build -- --debug --no-bundle # basic check for successful builds only, change later
 
