@@ -77,7 +77,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, ping, systemHealth, get_input_devices, get_output_devices])
+        .invoke_handler(tauri::generate_handler![greet, ping, systemHealth, get_input_devices, get_output_devices,get_default_output_device, get_default_input_device])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
