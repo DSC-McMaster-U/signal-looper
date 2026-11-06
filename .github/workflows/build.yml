@@ -1,0 +1,38 @@
+name: Build check on branch PRs
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: signal-looper/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: signal-looper/src-tauri
+
+      - name: Install dependencies
+        working-directory: signal-looper
+        run: npm ci
+
+      - name: Build app
+        working-directory: signal-looper
+        run: npm run tauri build -- --debug --no-bundle # basic check for successful builds only, change later
+
