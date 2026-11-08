@@ -1,13 +1,24 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use cpal::traits::{DeviceTrait, HostTrait};
-
-
+use cpal::traits::HostTrait;
+use serde::Serialize;
 
 //tester functions for frontend to call
+
+#[tauri::command]
+fn greet(name: &str) -> String {
+    format!("Hello, {name}! You've been greeted from Rust!")
+}
 
 #[tauri::command] //ping pong
 fn ping() -> String {
     "pong".to_string()
+}
+
+#[derive(Serialize)]
+struct SystemHealth {
+    status: String,
+    backend: String,
+    message: String,
 }
 
 #[tauri::command]
@@ -16,24 +27,24 @@ fn systemHealth() -> SystemHealth {
         //replace with actual information when available
         status: "ok".to_string(),
         backend: "Rust".to_string(),
-        message: "System is healthy AF".to_string()
+        message: "System is healthy AF".to_string(),
     }
 }
 
 #[tauri::command]
 fn get_input_devices() -> Vec<String> {
-
     let host = cpal::default_host();
 
-    let input_devices = host.input_devices()
+    let input_devices = host
+        .input_devices()
         .expect("Failed to get input devices")
-        .map(|device| device.name().expect("Failed to get device name"))
+        .map(|device| device.to_string())
         //loops through each device and gets its name
         .collect();
 
-        input_devices //vec<string> of input devices returned 
-        //treat it as String[] in frontend
-    }
+    input_devices //vec<string> of input devices returned 
+    //treat it as String[] in frontend
+}
 
 #[tauri::command]
 fn get_output_devices() -> Vec<String> {
@@ -42,7 +53,7 @@ fn get_output_devices() -> Vec<String> {
     let output_devices = host
         .output_devices()
         .expect("Failed to get output devices")
-        .map(|device| device.name().expect("Failed to get device name"))
+        .map(|device| device.to_string())
         .collect();
 
     output_devices
@@ -53,23 +64,16 @@ fn get_default_input_device() -> Option<String> {
     let host = cpal::default_host();
 
     host.default_input_device() //if there is a default input device, get its name and return it as an Option<String>
-        .and_then(|device| device.name().ok())
+        .map(|device| device.to_string())
 }
 
 #[tauri::command]
 fn get_default_output_device() -> Option<String> {
     let host = cpal::default_host();
 
-    host.default_output_device() 
-        .and_then(|device| device.name().ok())
+    host.default_output_device()
+        .map(|device| device.to_string())
 }
-
-#[tauri::command]
-fn get_default_input_device()
-
-
-
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -77,7 +81,15 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, ping, systemHealth, get_input_devices, get_output_devices,get_default_output_device, get_default_input_device])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            ping,
+            systemHealth,
+            get_input_devices,
+            get_output_devices,
+            get_default_output_device,
+            get_default_input_device
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
