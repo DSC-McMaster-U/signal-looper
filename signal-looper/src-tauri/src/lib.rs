@@ -1,3 +1,5 @@
+mod audio; 
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use cpal::traits::HostTrait;
 use serde::Serialize;
@@ -75,6 +77,24 @@ fn get_default_output_device() -> Option<String> {
         .map(|device| device.to_string())
 }
 
+#[tauri::command]
+async fn record_audio(seconds: f32) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        audio::record(seconds).map_err(|err| err.to_string())
+    })
+    .await
+    .map_err(|err| err.to_string())? 
+}
+
+#[tauri::command]
+async fn play_audio() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        audio::play().map_err(|err| err.to_string())
+    })
+    .await
+    .map_err(|err| err.to_string())? 
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -88,7 +108,9 @@ pub fn run() {
             get_input_devices,
             get_output_devices,
             get_default_output_device,
-            get_default_input_device
+            get_default_input_device,
+            record_audio,
+            play_audio,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
