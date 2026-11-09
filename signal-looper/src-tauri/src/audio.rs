@@ -1,12 +1,11 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::SampleFormat;
 use std::error::Error;
+use std::path::Path; 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-const FILE: &str = "recording.wav"; 
-
-pub fn record(seconds: f32) -> Result<(), Box<dyn Error>> {
+pub fn record(path: &Path, seconds: f32) -> Result<(), Box<dyn Error>> {
     // initialize default audio backend and set input device  
     let device = cpal::default_host()
         .default_input_device()
@@ -64,20 +63,20 @@ pub fn record(seconds: f32) -> Result<(), Box<dyn Error>> {
         bits_per_sample: 32,
         sample_format: hound::SampleFormat::Float, 
     };
-    let mut writer = hound::WavWriter::create(FILE, spec)?;
+    let mut writer = hound::WavWriter::create(path, spec)?;
     for &s in samples.iter() {
         writer.write_sample(s)?;
     }
     writer.finalize()?; 
 
-    println!("saved {} samples to {FILE}", samples.len());
+    println!("saved {} samples to {}", samples.len(), path.display());
     Ok(())
 }
 
-pub fn play() -> Result<(), Box<dyn Error>> {
+pub fn play(path: &Path) -> Result<(), Box<dyn Error>> {
     // load samples from .wav file
-    let mut reader = hound::WavReader::open(FILE)
-        .map_err(|err| format!("unable to open {FILE}: {err}"))?; 
+    let mut reader = hound::WavReader::open(path)
+        .map_err(|err| format!("unable to open {}: {err}", path.display()))?; 
     let in_rate = reader.spec().sample_rate; 
     let samples = reader.samples::<f32>().collect::<Result<Vec<f32>, _>>()?; 
     if samples.is_empty() {

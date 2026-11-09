@@ -3,6 +3,8 @@ mod audio;
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use cpal::traits::HostTrait;
 use serde::Serialize;
+use std::path::PathBuf;
+use tauri::{AppHandle, Manager}; 
 
 //tester functions for frontend to call
 
@@ -77,19 +79,28 @@ fn get_default_output_device() -> Option<String> {
         .map(|device| device.to_string())
 }
 
+
+fn recording_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|err| err.to_string())?; 
+    std::fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
+    Ok(dir.join("recording.wav")) 
+}
+
 #[tauri::command]
-async fn record_audio(seconds: f32) -> Result<(), String> {
+async fn record_audio(app: AppHandle, seconds: f32) -> Result<(), String> {
+    let path = recording_path(&app)?;
     tauri::async_runtime::spawn_blocking(move || {
-        audio::record(seconds).map_err(|err| err.to_string())
+        audio::record(&path, seconds).map_err(|err| err.to_string())
     })
     .await
     .map_err(|err| err.to_string())? 
 }
 
 #[tauri::command]
-async fn play_audio() -> Result<(), String> {
+async fn play_audio(app: AppHandle) -> Result<(), String> {
+    let path = recording_path(&app)?;
     tauri::async_runtime::spawn_blocking(move || {
-        audio::play().map_err(|err| err.to_string())
+        audio::play(&path).map_err(|err| err.to_string())
     })
     .await
     .map_err(|err| err.to_string())? 
