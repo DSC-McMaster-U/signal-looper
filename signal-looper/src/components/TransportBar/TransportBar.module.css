@@ -16,3 +16,17 @@
     align-items: flex-start;
     gap: 0.625rem;
 }
+
+.timing {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.metronome {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.625rem;
+}

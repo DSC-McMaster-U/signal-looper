@@ -1,0 +1,48 @@
+.button,
+.button:hover,
+.button:active {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--subtext0);
+    border-radius: 8px;
+    background: var(--crust);
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.icon {
+    position: absolute;
+    left: 9px;
+    top: 9px;
+    display: block;
+}
+
+/* state=Hover */
+.button:not(:disabled):not([data-state]):hover {
+    background: var(--surface1);
+}
+
+/* state=On (not in Figma yet; matches Play Button's Playing state) */
+.button[data-state="on"] {
+    border-color: var(--green);
+    background: rgb(166 227 161 / 0.2); /* --green at 20% */
+}
+
+/* state=Disabled */
+.button:disabled {
+    border-color: var(--surface1);
+    cursor: default;
+}
+
+.button:disabled .icon {
+    opacity: 0.4;
+}
