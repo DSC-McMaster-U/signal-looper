@@ -1,0 +1,72 @@
+.button,
+.button:hover,
+.button:active {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    background: var(--crust);
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.icon {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    display: block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--red);
+    border-radius: 50%;
+}
+
+/* state=Hover */
+.button:not(:disabled):not([data-state]):hover {
+    background: var(--surface1);
+}
+
+.button:not(:disabled):not([data-state]):hover .icon {
+    background: var(--crust);
+}
+
+/* state=Count-in */
+.button[data-state="count-in"] {
+    border-color: var(--yellow);
+    background: rgb(249 226 175 / 0.2);
+}
+
+.button[data-state="count-in"] .icon {
+    border-color: var(--yellow);
+    background: var(--yellow);
+}
+
+/* state=Record */
+.button[data-state="recording"] {
+    background: rgb(243 139 168 / 0.2);
+}
+
+.button[data-state="recording"] .icon {
+    background: var(--red);
+}
+
+/* state=Disabled */
+.button:disabled {
+    border-color: var(--surface1);
+    background: var(--crust);
+    cursor: default;
+}
+
+.button:disabled .icon {
+    border-color: var(--surface2);
+    background: none;
+}
