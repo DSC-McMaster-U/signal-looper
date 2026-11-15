@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import TopBar from "./components/TopBar";
 
 function App() {
   const [seconds, setSeconds] = useState(5);
@@ -28,6 +29,7 @@ function App() {
 
   return (
     <main className="container">
+      <TopBar />
       <p>{status}</p>
       <label>
         seconds:
