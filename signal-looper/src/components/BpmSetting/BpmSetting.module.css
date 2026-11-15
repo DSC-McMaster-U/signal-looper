@@ -1,0 +1,97 @@
+.box {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 61px;
+    height: 42px;
+    padding: 6px;
+    border: 1px solid var(--subtext0);
+    border-radius: 8px;
+    background: var(--crust);
+}
+
+.box:focus-within {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.box[data-disabled] {
+    border-color: var(--surface1);
+}
+
+.text {
+    display: flex;
+    flex: 1 0 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-width: 1px;
+    height: 100%;
+    overflow: clip;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    line-height: normal;
+}
+
+.caption {
+    color: var(--subtext0);
+    font-size: 10px;
+}
+
+/* Reset the template's global input styles */
+.input,
+.input:focus {
+    width: 100%;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text);
+    font-size: 14px;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    line-height: normal;
+}
+
+.arrows {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 12px;
+    height: 100%;
+}
+
+.arrow,
+.arrow:hover,
+.arrow:active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.arrow:not(:disabled):hover {
+    background: var(--surface1);
+}
+
+.arrow:focus-visible {
+    outline: 1px solid var(--text);
+}
+
+.arrow:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.arrow img {
+    display: block;
+}

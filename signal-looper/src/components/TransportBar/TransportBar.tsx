@@ -1,7 +1,13 @@
+import { useState } from "react";
 import styles from "./TransportBar.module.css";
 import RecordButton from "../RecordButton/RecordButton";
 import PlayButton from "../PlayButton/PlayButton";
 import StopButton from "../StopButton/StopButton";
+import TimeSig from "../TimeSig/TimeSig";
+import BpmSetting from "../BpmSetting/BpmSetting";
+import MetronomeButton from "../MetronomeButton/MetronomeButton";
+import DropdownBarSelection, { type DropdownOption } from "../DropdownBarSelection/DropdownBarSelection";
+import { useMetronome } from "../../hooks/useMetronome";
 
 /**
  * Transport Bar (Figma 113:34) containing the Controls group (113:61):
@@ -49,15 +55,50 @@ import StopButton from "../StopButton/StopButton";
  *   - Should Stop be enabled in idle after a pause (playhead not at bar 1)?
  *   - Record in idle when a loop already exists: overdub it, or record a new loop?
  *
- * Record's count-in look (state="count-in") is handled in the metronome ticket.
+ * Metronome (#21): tempo, time signature, metronome toggle and count-in.
+ *   Tempo state lives here for now; move it to the shared store once there is one,
+ *   since recording and the timeline will need BPM too.
+ *   Until Play is wired up, turning the metronome on starts clicking straight away.
+ *   Once loop state exists, pass `running: metronomeOn && loopState !== "idle"`.
+ *   Count-in: when Record is pressed with countIn > 0, play countIn bars of clicks
+ *   with Record in state="count-in", then start recording. Needs the backend
+ *   record command, so it isn't wired up yet.
  */
+const COUNT_IN_OPTIONS: DropdownOption<number>[] = [
+    { value: 0, label: "Off" },
+    { value: 1, label: "1 bar" },
+    { value: 2, label: "2 bars" },
+];
+
 export default function TransportBar() {
+    const [bpm, setBpm] = useState(120);
+    const [beatsPerBar, setBeatsPerBar] = useState(4);
+    const [metronomeOn, setMetronomeOn] = useState(false);
+    const [countIn, setCountIn] = useState(2);
+
+    useMetronome({ running: metronomeOn, bpm, beatsPerBar });
+
     return (
         <div className={styles.transportBar}>
+            {/* Figma "Timing" (177:9351). Length and Position Readout go here later. */}
+            <div className={styles.timing}>
+                <TimeSig beatsPerBar={beatsPerBar} onChange={setBeatsPerBar} />
+                <BpmSetting bpm={bpm} onChange={setBpm} />
+            </div>
             <div className={styles.controls}>
                 <RecordButton />
                 <PlayButton />
                 <StopButton />
+            </div>
+            {/* Figma "Metronome Controls" (181:9435) */}
+            <div className={styles.metronome}>
+                <MetronomeButton on={metronomeOn} onToggle={() => setMetronomeOn((on) => !on)} />
+                <DropdownBarSelection
+                    caption="Count-in"
+                    value={countIn}
+                    options={COUNT_IN_OPTIONS}
+                    onChange={setCountIn}
+                />
             </div>
         </div>
     );
