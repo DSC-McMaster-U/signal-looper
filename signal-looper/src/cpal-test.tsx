@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useState } from "react";
-import "./audio-test.css";
+import "./cpal-test.css";
 
 const CpalTest: React.FC = () => {
 	const [status, setStatus] = useState("");
