@@ -1,0 +1,60 @@
+.cpal-test {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+.cpal-test__card {
+  width: min(100%, 30rem);
+  padding: 2.5rem;
+  border: 1px solid #dce3f0;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2.5rem rgba(25, 43, 81, 0.1);
+  text-align: center;
+}
+
+.cpal-test h1,
+.cpal-test p {
+  margin: 0;
+}
+
+.cpal-test h1 {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  line-height: 1.1;
+}
+
+.cpal-test button {
+  width: 100%;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  background: #315fc9;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.cpal-test button:hover:not(:disabled) {
+  background: #244da8;
+}
+
+.cpal-test button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.cpal-status {
+  margin-top: 1rem !important;
+  min-height: 1.5rem;
+  color: #59657c;
+  font-size: 0.9375rem;
+}
