@@ -1,0 +1,50 @@
+.button,
+.button:hover,
+.button:active {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--subtext0);
+    border-radius: 8px;
+    background: var(--crust);
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.icon {
+    position: absolute;
+    left: 11px;
+    top: 11px;
+    display: block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--text);
+}
+
+/* state=Hover */
+.button:not(:disabled):hover {
+    background: var(--surface0);
+}
+
+.button:not(:disabled):hover .icon {
+    background: var(--crust);
+}
+
+/* state=Disabled */
+.button:disabled {
+    border-color: var(--surface1);
+    background: var(--crust);
+    cursor: default;
+}
+
+.button:disabled .icon {
+    border-color: var(--surface2);
+}
