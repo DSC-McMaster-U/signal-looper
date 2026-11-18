@@ -8,6 +8,7 @@ import BpmSetting from "../BpmSetting/BpmSetting";
 import MetronomeButton from "../MetronomeButton/MetronomeButton";
 import DropdownBarSelection, { type DropdownOption } from "../DropdownBarSelection/DropdownBarSelection";
 import { useMetronome } from "../../hooks/useMetronome";
+import VolumeControl from "../VolumeControl/VolumeControl";
 
 /**
  * Transport Bar (Figma 113:34) containing the Controls group (113:61):
@@ -99,6 +100,10 @@ export default function TransportBar() {
                     options={COUNT_IN_OPTIONS}
                     onChange={setCountIn}
                 />
+            </div>
+
+            <div className={styles.volume}>
+                <VolumeControl />
             </div>
         </div>
     );

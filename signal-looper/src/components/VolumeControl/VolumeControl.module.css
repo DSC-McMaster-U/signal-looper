@@ -1,0 +1,99 @@
+.control {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    gap: 0;
+    width: 11.5rem;
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.volumeLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.percentage {
+    color: var(--subtext0);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.slider {
+    width: 100%;
+    height: 1rem;
+    margin: -0.25rem 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+/* -webkit- modifies visuals for Chrome, Safari and Edge, whereas -moz- (Firefox) modifies visuals for Firefoz.  */
+
+.slider::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 999px;
+    background: linear-gradient(
+        to right,
+        var(--subtext0) 0 var(--volume-progress),
+        var(--surface1) var(--volume-progress) 100%
+    );
+}
+
+.slider::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 999px;
+    background: var(--surface1);
+}
+
+.slider::-moz-range-progress {
+    height: 0.25rem;
+    border-radius: 999px;
+    background: var(--subtext0);
+}
+
+.slider::-webkit-slider-thumb {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: -0.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 50%;
+    background: var(--text);
+}
+
+.slider::-moz-range-thumb {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--text);
+}
+
+.slider:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
