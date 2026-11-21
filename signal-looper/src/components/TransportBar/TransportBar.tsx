@@ -6,9 +6,12 @@ import StopButton from "../StopButton/StopButton";
 import TimeSig from "../TimeSig/TimeSig";
 import BpmSetting from "../BpmSetting/BpmSetting";
 import MetronomeButton from "../MetronomeButton/MetronomeButton";
-import DropdownBarSelection, { type DropdownOption } from "../DropdownBarSelection/DropdownBarSelection";
+import DropdownBarSelection, {
+  type DropdownOption,
+} from "../DropdownBarSelection/DropdownBarSelection";
 import { useMetronome } from "../../hooks/useMetronome";
 import VolumeControl from "../VolumeControl/VolumeControl";
+import { invoke } from "@tauri-apps/api/core";
 
 /**
  * Transport Bar (Figma 113:34) containing the Controls group (113:61):
@@ -41,8 +44,6 @@ import VolumeControl from "../VolumeControl/VolumeControl";
  *   overdubbing   Record state="recording"; Play disabled
  *
  * Button click -> new loop state (the backend makes the change):
- *   None of the buttons accept `onClick` yet; add one to each when the Tauri
- *   commands exist.
  *   Record   idle        -> recording
  *            recording   -> playing      (closes the loop and plays it back)
  *            playing     -> overdubbing
@@ -65,46 +66,77 @@ import VolumeControl from "../VolumeControl/VolumeControl";
  *   with Record in state="count-in", then start recording. Needs the backend
  *   record command, so it isn't wired up yet.
  */
+
+type TransportState = "stopped" | "playing" | "paused";
+
 const COUNT_IN_OPTIONS: DropdownOption<number>[] = [
-    { value: 0, label: "Off" },
-    { value: 1, label: "1 bar" },
-    { value: 2, label: "2 bars" },
+  { value: 0, label: "Off" },
+  { value: 1, label: "1 bar" },
+  { value: 2, label: "2 bars" },
 ];
 
 export default function TransportBar() {
-    const [bpm, setBpm] = useState(120);
-    const [beatsPerBar, setBeatsPerBar] = useState(4);
-    const [metronomeOn, setMetronomeOn] = useState(false);
-    const [countIn, setCountIn] = useState(2);
+  const [bpm, setBpm] = useState(120);
+  const [beatsPerBar, setBeatsPerBar] = useState(4);
+  const [metronomeOn, setMetronomeOn] = useState(false);
+  const [countIn, setCountIn] = useState(2);
 
-    useMetronome({ running: metronomeOn, bpm, beatsPerBar });
+  const [transport, setTransport] = useState<TransportState>("stopped");
+  const playing = transport === "playing";
 
-    return (
-        <div className={styles.transportBar}>
-            {/* Figma "Timing" (177:9351). Length and Position Readout go here later. */}
-            <div className={styles.timing}>
-                <TimeSig beatsPerBar={beatsPerBar} onChange={setBeatsPerBar} />
-                <BpmSetting bpm={bpm} onChange={setBpm} />
-            </div>
-            <div className={styles.controls}>
-                <RecordButton />
-                <PlayButton />
-                <StopButton />
-            </div>
-            {/* Figma "Metronome Controls" (181:9435) */}
-            <div className={styles.metronome}>
-                <MetronomeButton on={metronomeOn} onToggle={() => setMetronomeOn((on) => !on)} />
-                <DropdownBarSelection
-                    caption="Count-in"
-                    value={countIn}
-                    options={COUNT_IN_OPTIONS}
-                    onChange={setCountIn}
-                />
-            </div>
+  const handlePlay = async () => {
+    try {
+      if (transport === "playing") {
+        await invoke("pause_audio");
+        setTransport("paused");
+      } else if (transport === "paused") {
+        await invoke("resume_audio");
+        setTransport("playing");
+      } else {
+        await invoke("play_audio");
+        setTransport("playing");
+      }
+    } catch (e) {
+      console.error("transport failed:", e);
+    }
+  };
 
-            <div className={styles.volume}>
-                <VolumeControl />
-            </div>
-        </div>
-    );
+  const handleStop = async () => {
+    await invoke("stop_audio");
+    setTransport("stopped");
+  };
+
+  useMetronome({ running: metronomeOn, bpm, beatsPerBar });
+
+  return (
+    <div className={styles.transportBar}>
+      {/* Figma "Timing" (177:9351). Length and Position Readout go here later. */}
+      <div className={styles.timing}>
+        <TimeSig beatsPerBar={beatsPerBar} onChange={setBeatsPerBar} />
+        <BpmSetting bpm={bpm} onChange={setBpm} />
+      </div>
+      <div className={styles.controls}>
+        <RecordButton />
+        <PlayButton playing={playing} onClick={handlePlay} />
+        <StopButton onClick={handleStop} />
+      </div>
+      {/* Figma "Metronome Controls" (181:9435) */}
+      <div className={styles.metronome}>
+        <MetronomeButton
+          on={metronomeOn}
+          onToggle={() => setMetronomeOn((on) => !on)}
+        />
+        <DropdownBarSelection
+          caption="Count-in"
+          value={countIn}
+          options={COUNT_IN_OPTIONS}
+          onChange={setCountIn}
+        />
+      </div>
+
+      <div className={styles.volume}>
+        <VolumeControl />
+      </div>
+    </div>
+  );
 }

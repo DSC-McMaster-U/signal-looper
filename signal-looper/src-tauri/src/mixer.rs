@@ -22,6 +22,12 @@ impl Mixer {
           self.nodes.push(SampleNode::new(buffer)); 
           self.paused = false; 
         }
+        AudioCommand::Pause => {
+          self.paused = true;
+        }
+        AudioCommand::Resume => {
+          self.paused = false; 
+        }
         AudioCommand::Stop => {
           self.nodes.clear(); 
           self.paused = false; 

@@ -48,6 +48,14 @@ impl AudioEngine {
     let _ = self.tx.send(AudioCommand::Play(buffer));
   }
 
+  pub fn pause(&self) {
+    let _ = self.tx.send(AudioCommand::Pause); 
+  }
+
+  pub fn resume(&self) {
+    let _ = self.tx.send(AudioCommand::Resume); 
+  }
+  
   pub fn stop(&self) { 
     let _ = self.tx.send(AudioCommand::Stop);
   }

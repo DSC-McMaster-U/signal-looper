@@ -111,6 +111,12 @@ async fn play_audio(app: AppHandle, engine: State<'_, AudioEngine>) -> Result<()
 }
 
 #[tauri::command]
+fn pause_audio(engine: State<AudioEngine>) { engine.pause(); }
+
+#[tauri::command]
+fn resume_audio(engine: State<AudioEngine>) { engine.resume(); }
+
+#[tauri::command]
 fn stop_audio(engine: State<AudioEngine>) { engine.stop(); }
 
 #[tauri::command]
@@ -137,6 +143,8 @@ pub fn run() {
             get_default_input_device,
             record_audio,
             play_audio,
+            pause_audio,
+            resume_audio,
             stop_audio, 
             play_test_tone,
         ])
