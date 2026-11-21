@@ -1,10 +1,18 @@
 mod audio;
+mod assets;
+mod command;
+mod engine;
+mod mixer;
+mod node; 
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use cpal::traits::HostTrait;
 use serde::Serialize;
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+use engine::AudioEngine; 
+
+const RECORDING_ID: &str = "recording"; 
 
 //tester functions for frontend to call
 
@@ -96,12 +104,14 @@ async fn record_audio(app: AppHandle, seconds: f32) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn play_audio(app: AppHandle) -> Result<(), String> {
+async fn play_audio(app: AppHandle, engine: State<'_, AudioEngine>) -> Result<(), String> {
     let path = recording_path(&app)?;
-    tauri::async_runtime::spawn_blocking(move || audio::play(&path).map_err(|err| err.to_string()))
-        .await
-        .map_err(|err| err.to_string())?
+    engine.play(assets::load_wav(&path)?);
+    Ok(())
 }
+
+#[tauri::command]
+fn stop_audio(engine: State<AudioEngine>) { engine.stop(); }
 
 #[tauri::command]
 async fn play_test_tone() -> Result<(), String> {
@@ -113,6 +123,7 @@ async fn play_test_tone() -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(AudioEngine::new())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -126,6 +137,7 @@ pub fn run() {
             get_default_input_device,
             record_audio,
             play_audio,
+            stop_audio, 
             play_test_tone,
         ])
         .run(tauri::generate_context!())
