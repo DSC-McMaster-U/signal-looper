@@ -4,15 +4,16 @@ mod command;
 mod engine;
 mod mixer;
 mod node; 
+mod recorder;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use cpal::traits::HostTrait;
 use serde::Serialize;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager, State};
-use engine::AudioEngine; 
 
-const RECORDING_ID: &str = "recording"; 
+use engine::AudioEngine; 
+use recorder::Recorder; 
 
 //tester functions for frontend to call
 
@@ -93,14 +94,15 @@ fn recording_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("recording.wav"))
 }
 
-#[tauri::command]
-async fn record_audio(app: AppHandle, seconds: f32) -> Result<(), String> {
+#[tauri::command(async)]
+fn start_recording(app: AppHandle, recorder: State<Recorder>) -> Result<(), String> {
     let path = recording_path(&app)?;
-    tauri::async_runtime::spawn_blocking(move || {
-        audio::record(&path, seconds).map_err(|err| err.to_string())
-    })
-    .await
-    .map_err(|err| err.to_string())?
+    recorder.start(path)
+}
+
+#[tauri::command(async)]
+fn stop_recording(recorder: State<Recorder>) -> Result<(), String> {
+    recorder.stop()
 }
 
 #[tauri::command]
@@ -129,10 +131,14 @@ async fn play_test_tone() -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(AudioEngine::new())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            app.manage(AudioEngine::new());
+            app.manage(Recorder::new());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             ping,
@@ -141,7 +147,8 @@ pub fn run() {
             get_output_devices,
             get_default_output_device,
             get_default_input_device,
-            record_audio,
+            start_recording,
+            stop_recording, 
             play_audio,
             pause_audio,
             resume_audio,

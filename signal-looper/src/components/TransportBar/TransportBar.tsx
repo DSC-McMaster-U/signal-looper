@@ -84,6 +84,10 @@ export default function TransportBar() {
   const [transport, setTransport] = useState<TransportState>("stopped");
   const playing = transport === "playing";
 
+  const [recording, setRecording] = useState(false);
+
+  useMetronome({ running: metronomeOn, bpm, beatsPerBar });
+
   const handlePlay = async () => {
     try {
       if (transport === "playing") {
@@ -106,7 +110,21 @@ export default function TransportBar() {
     setTransport("stopped");
   };
 
-  useMetronome({ running: metronomeOn, bpm, beatsPerBar });
+  const handleRecording = async () => {
+    try {
+      if (!recording) {
+        await invoke("stop_audio"); // for now, don't play audio while recording is in progress
+        setTransport("stopped");
+        await invoke("start_recording");
+        setRecording(true);
+      } else {
+        await invoke("stop_recording");
+        setRecording(false);
+      }
+    } catch (e) {
+      console.error("record failed:", e);
+    }
+  };
 
   return (
     <div className={styles.transportBar}>
@@ -116,7 +134,7 @@ export default function TransportBar() {
         <BpmSetting bpm={bpm} onChange={setBpm} />
       </div>
       <div className={styles.controls}>
-        <RecordButton />
+        <RecordButton onClick={handleRecording} />
         <PlayButton playing={playing} onClick={handlePlay} />
         <StopButton onClick={handleStop} />
       </div>

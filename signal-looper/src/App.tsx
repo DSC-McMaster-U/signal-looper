@@ -5,44 +5,10 @@ import TopBar from "./components/TopBar/TopBar";
 import TransportBar from "./components/TransportBar/TransportBar";
 
 function App() {
-  const [seconds, setSeconds] = useState(5);
-  const [status, setStatus] = useState("hit record to start");
-
-  async function recordAudio() {
-    setStatus(`recording for ${seconds} seconds...`);
-    try {
-      await invoke("record_audio", { seconds });
-      setStatus(`saved a recording`);
-    } catch (err) {
-      setStatus(`error: ${err}`);
-    }
-  }
-
-  async function playAudio() {
-    setStatus("playing...");
-    try {
-      await invoke("play_audio");
-      setStatus("done playing");
-    } catch (err) {
-      setStatus(`error: ${err}`);
-    }
-  }
-
   return (
     <main className="container">
       <TopBar />
       <TransportBar />
-      <p>{status}</p>
-      <label>
-        seconds:
-        <input
-          type="number"
-          value={seconds}
-          onChange={(e) => setSeconds(Number(e.target.value))}
-        />
-      </label>
-      <button onClick={recordAudio}>Record</button>
-      <button onClick={playAudio}>Play</button>
     </main>
   );
 }
