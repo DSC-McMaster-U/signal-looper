@@ -1,25 +1,56 @@
+mod assets;
 mod audio;
 pub mod audio_buffer;
 pub mod audio_io;
 pub mod audio_library;
-mod resampler;
-mod assets;
 mod command;
 mod engine;
 mod mixer;
-mod node; 
+mod node;
 mod recorder;
+mod resampler;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use cpal::traits::HostTrait;
+use engine::AudioEngine;
+use recorder::Recorder;
 use serde::Serialize;
 use std::path::PathBuf;
-
+use std::sync::{
+    Arc,
+    atomic::{AtomicU32, Ordering},
+};
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
-use engine::AudioEngine; 
-use recorder::Recorder; 
+struct PlaybackVolume(Arc<AtomicU32>);
+
+impl Default for PlaybackVolume {
+    fn default() -> Self {
+        Self(Arc::new(AtomicU32::new(1.0f32.to_bits())))
+    }
+}
+
+impl PlaybackVolume {
+    fn set(&self, volume: f32) {
+        self.0.store(volume.to_bits(), Ordering::Relaxed);
+    }
+
+    fn get(&self) -> f32 {
+        f32::from_bits(self.0.load(Ordering::Relaxed))
+    }
+}
+
+#[tauri::command]
+fn set_master_volume(volume: f32, state: State<'_, PlaybackVolume>) -> Result<(), String> {
+    if !volume.is_finite() || !(0.0..=1.0).contains(&volume) {
+        return Err("Volume must be between 0.0 and 1.0".to_string());
+    }
+
+    state.set(volume);
+
+    Ok(())
+}
 
 //tester functions for frontend to call
 
@@ -61,7 +92,7 @@ fn get_input_devices() -> Vec<String> {
         //loops through each device and gets its name
         .collect();
 
-    input_devices //vec<string> of input devices returned 
+    input_devices //vec<string> of input devices returned
     //treat it as String[] in frontend
 }
 
@@ -112,20 +143,32 @@ fn stop_recording(recorder: State<Recorder>) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn play_audio(app: AppHandle, engine: State<'_, AudioEngine>) -> Result<(), String> {
+async fn play_audio(app: AppHandle, state: State<'_, PlaybackVolume>) -> Result<(), String> {
     let path = recording_path(&app)?;
-    engine.play(assets::load_wav(&path)?);
-    Ok(())
+
+    let volume = Arc::clone(&state.0);
+
+    tauri::async_runtime::spawn_blocking(move || {
+        audio::play(&path, volume).map_err(|err| err.to_string())
+    })
+    .await
+    .map_err(|err| err.to_string())?
 }
 
 #[tauri::command]
-fn pause_audio(engine: State<AudioEngine>) { engine.pause(); }
+fn pause_audio(engine: State<AudioEngine>) {
+    engine.pause();
+}
 
 #[tauri::command]
-fn resume_audio(engine: State<AudioEngine>) { engine.resume(); }
+fn resume_audio(engine: State<AudioEngine>) {
+    engine.resume();
+}
 
 #[tauri::command]
-fn stop_audio(engine: State<AudioEngine>) { engine.stop(); }
+fn stop_audio(engine: State<AudioEngine>) {
+    engine.stop();
+}
 
 #[tauri::command]
 async fn play_test_tone() -> Result<(), String> {
@@ -143,12 +186,10 @@ async fn import_audio(
     library: tauri::State<'_, audio_library::AudioLibrary>,
     path: Option<String>,
 ) -> Result<Option<audio_library::ImportedAudio>, String> {
-
     // Share the library with the background task without copying audio samples.
     let library = library.inner().clone();
 
     tauri::async_runtime::spawn_blocking(move || {
-
         // Resolve the source in this background task so file selection and import
         // processing do not block the UI thread.
         let source = match path {
@@ -178,23 +219,27 @@ async fn import_audio(
         // Wrap returned metadata in Some; import errors propagate to the frontend.
         library.import(&source).map(Some)
     })
-        // Wait for the task, convert task errors to strings, and return its result.
-        .await
-        .map_err(|error| error.to_string())?
-
+    // Wait for the task, convert task errors to strings, and return its result.
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 /// Return metadata for all imported files in unspecified order. Audio samples
 /// remain in the library's shared buffers and are not sent to the frontend.
 #[tauri::command]
-fn list_imported_audio(library: tauri::State<'_, audio_library::AudioLibrary>,) -> Result<Vec<audio_library::ImportedAudio>, String> {
+fn list_imported_audio(
+    library: tauri::State<'_, audio_library::AudioLibrary>,
+) -> Result<Vec<audio_library::ImportedAudio>, String> {
     library.list()
 }
 
 /// Return one imported file's metadata by ID. An invalid or missing ID returns
 /// an error. Backend playback retrieves the samples with AudioLibrary::get_buffer.
 #[tauri::command]
-fn get_imported_audio(id: String, library: tauri::State<'_, audio_library::AudioLibrary>, ) -> Result<audio_library::ImportedAudio, String> {
+fn get_imported_audio(
+    id: String,
+    library: tauri::State<'_, audio_library::AudioLibrary>,
+) -> Result<audio_library::ImportedAudio, String> {
     library.get(&id)
 }
 
@@ -202,7 +247,10 @@ fn get_imported_audio(id: String, library: tauri::State<'_, audio_library::Audio
 /// Its buffer is freed when the last shared reference is dropped, so active
 /// playback references remain valid after removal.
 #[tauri::command]
-fn remove_imported_audio(id: String, library: tauri::State<'_, audio_library::AudioLibrary>, ) -> Result<bool, String> {
+fn remove_imported_audio(
+    id: String,
+    library: tauri::State<'_, audio_library::AudioLibrary>,
+) -> Result<bool, String> {
     library.remove(&id)
 }
 
@@ -210,6 +258,7 @@ fn remove_imported_audio(id: String, library: tauri::State<'_, audio_library::Au
 pub fn run() {
     tauri::Builder::default()
         .manage(audio_library::AudioLibrary::default())
+        .manage(PlaybackVolume::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -227,16 +276,17 @@ pub fn run() {
             get_default_output_device,
             get_default_input_device,
             start_recording,
-            stop_recording, 
+            stop_recording,
             play_audio,
             pause_audio,
             resume_audio,
-            stop_audio, 
+            stop_audio,
             play_test_tone,
             import_audio,
             list_imported_audio,
             get_imported_audio,
             remove_imported_audio,
+            set_master_volume
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
