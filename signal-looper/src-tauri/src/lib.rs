@@ -1,4 +1,8 @@
 mod audio;
+pub mod audio_buffer;
+pub mod audio_io;
+pub mod audio_library;
+mod resampler;
 mod assets;
 mod command;
 mod engine;
@@ -10,7 +14,9 @@ mod recorder;
 use cpal::traits::HostTrait;
 use serde::Serialize;
 use std::path::PathBuf;
+
 use tauri::{AppHandle, Manager, State};
+use tauri_plugin_dialog::DialogExt;
 
 use engine::AudioEngine; 
 use recorder::Recorder; 
@@ -128,9 +134,82 @@ async fn play_test_tone() -> Result<(), String> {
         .map_err(|err| err.to_string())?
 }
 
+/// Import a WAV from a source path, or open the file picker when path is omitted.
+/// The audio is decoded and resampled to 48 kHz before its buffer enters the
+/// in-memory library. Return its ID and metadata, or null if selection is cancelled.
+#[tauri::command]
+async fn import_audio(
+    app: AppHandle,
+    library: tauri::State<'_, audio_library::AudioLibrary>,
+    path: Option<String>,
+) -> Result<Option<audio_library::ImportedAudio>, String> {
+
+    // Share the library with the background task without copying audio samples.
+    let library = library.inner().clone();
+
+    tauri::async_runtime::spawn_blocking(move || {
+
+        // Resolve the source in this background task so file selection and import
+        // processing do not block the UI thread.
+        let source = match path {
+            Some(path) => {
+                // Use the supplied path, rejecting empty input before opening a file.
+                if path.trim().is_empty() {
+                    return Err("Audio source path must not be empty".into());
+                }
+                PathBuf::from(path)
+            }
+            None => {
+                // No path was supplied: open the native WAV file picker.
+                let Some(file) = app
+                    .dialog()
+                    .file()
+                    .add_filter("WAV audio", &["wav"])
+                    .blocking_pick_file()
+                else {
+                    return Ok(None);
+                };
+                // Convert the selected file to a local filesystem path.
+                file.into_path().map_err(|error| error.to_string())?
+            }
+        };
+
+        // Decode -> resample to 48 kHz -> create AudioBuffer -> store under a new ID.
+        // Wrap returned metadata in Some; import errors propagate to the frontend.
+        library.import(&source).map(Some)
+    })
+        // Wait for the task, convert task errors to strings, and return its result.
+        .await
+        .map_err(|error| error.to_string())?
+
+}
+
+/// Return metadata for all imported files in unspecified order. Audio samples
+/// remain in the library's shared buffers and are not sent to the frontend.
+#[tauri::command]
+fn list_imported_audio(library: tauri::State<'_, audio_library::AudioLibrary>,) -> Result<Vec<audio_library::ImportedAudio>, String> {
+    library.list()
+}
+
+/// Return one imported file's metadata by ID. An invalid or missing ID returns
+/// an error. Backend playback retrieves the samples with AudioLibrary::get_buffer.
+#[tauri::command]
+fn get_imported_audio(id: String, library: tauri::State<'_, audio_library::AudioLibrary>, ) -> Result<audio_library::ImportedAudio, String> {
+    library.get(&id)
+}
+
+/// Remove an imported file from the library; return false if its ID is missing.
+/// Its buffer is freed when the last shared reference is dropped, so active
+/// playback references remain valid after removal.
+#[tauri::command]
+fn remove_imported_audio(id: String, library: tauri::State<'_, audio_library::AudioLibrary>, ) -> Result<bool, String> {
+    library.remove(&id)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(audio_library::AudioLibrary::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -154,6 +233,10 @@ pub fn run() {
             resume_audio,
             stop_audio, 
             play_test_tone,
+            import_audio,
+            list_imported_audio,
+            get_imported_audio,
+            remove_imported_audio,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
