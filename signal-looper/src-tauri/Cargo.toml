@@ -27,6 +27,7 @@ tauri-plugin-dialog = "2"
 cpal = "0.18.2"
 hound = "3.5.1"
 rubato = "5.1.0"
+crossbeam = "0.8.5"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
