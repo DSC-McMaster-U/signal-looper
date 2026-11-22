@@ -2,7 +2,7 @@
 use crate::audio_buffer::AudioBuffer;
 use crate::audio_io::import_audio;
 use serde::Serialize;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
@@ -45,7 +45,7 @@ impl StoredAudio {
 #[derive(Default)]
 struct Library {
     next_id: u64,
-    files: BTreeMap<u64, StoredAudio>,
+    files: HashMap<u64, StoredAudio>,
 }
 
 /// In-memory collection managed by Tauri. Clones share the same library.
@@ -71,7 +71,8 @@ impl AudioLibrary {
         Ok(metadata)
     }
 
-    /// Return metadata for all imported files in ID (insertion) order.
+    /// Return metadata for all imported files in unspecified order.
+    /// Sort the returned list separately when a specific display order is needed.
     pub fn list(&self) -> Result<Vec<ImportedAudio>, String> {
         let library = self.inner.lock().map_err(|error| error.to_string())?;
         Ok(library

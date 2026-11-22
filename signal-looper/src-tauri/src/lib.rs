@@ -165,7 +165,7 @@ async fn import_audio(
 
 }
 
-/// Return metadata for all imported files in insertion order. Audio samples
+/// Return metadata for all imported files in unspecified order. Audio samples
 /// remain in the library's shared buffers and are not sent to the frontend.
 #[tauri::command]
 fn list_imported_audio(library: tauri::State<'_, audio_library::AudioLibrary>,) -> Result<Vec<audio_library::ImportedAudio>, String> {
